@@ -9,7 +9,7 @@ python Main.py
 ```
 It is also possible to run the program on a custom set of lead molecules and/or fragments. 
 ```sh
-python Main.py lead_file.smi fragment_molecules.smi
+python Main.py fragment_molecules.smi lead_file.smi
 ```
 Molecules that are genertated during the process can be vied by running:
 ```sh
