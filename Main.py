@@ -43,10 +43,10 @@ if __name__ == "__main__":
     fragment_file = "./Data/molecules.smi"
     lead_file = "./Data/dopamineD4props.csv"
 
-    if len(sys.argv) > 2:
+    if len(sys.argv) > 1:
         fragment_file = sys.argv[1]
         
-    if len(sys.argv) > 3:
+    if len(sys.argv) > 2:
         lead_file = sys.argv[2]
         
     main(fragment_file, lead_file)
