@@ -20,7 +20,8 @@ Any global parameters can be changed by changing them in the file "Modules/globa
 
 ## Requirements
 
-The program is written in Python 2.7 and requires the following python libraries:
+The program is originally written in Python 2.7 but there is now a 3.6 version as well.
+The following Python libraries are required to run it:
 - rdkit
 - numpy
 - sklearn
