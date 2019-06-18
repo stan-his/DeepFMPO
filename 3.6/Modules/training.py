@@ -21,7 +21,7 @@ def train(X, actor, critic, decodings,out_dir=None):
     m = X.shape[1]
     
     
-    for e in xrange(epochs):
+    for e in range(epochs):
 
         rand_n = np.random.randint(0,X.shape[0],batch_size)
         batch_mol = X[rand_n].copy()
@@ -29,7 +29,7 @@ def train(X, actor, critic, decodings,out_dir=None):
         org_mols = batch_mol.copy()
         stopped = np.zeros(batch_size) != 0
 
-        for t in xrange(times):
+        for t in range(times):
 
             tm = (np.ones((batch_size,1)) * t) / times
 
@@ -40,7 +40,7 @@ def train(X, actor, critic, decodings,out_dir=None):
             rewards = np.zeros((batch_size,1))
 
 
-            for i in xrange(batch_size):
+            for i in range(batch_size):
                 a = 0
                 while True:
                     rand_select[i] -= probs[i,a]
@@ -52,7 +52,7 @@ def train(X, actor, critic, decodings,out_dir=None):
 
             Vs = critic.predict([batch_mol,tm])
 
-            for i in xrange(batch_size):
+            for i in range(batch_size):
 
                 a = int(actions[i])
                 if stopped[i] or a == n_actions - 1:
@@ -105,7 +105,7 @@ def train(X, actor, critic, decodings,out_dir=None):
             critic.fit([old_batch,tm], target, verbose=0)
             target_actor = np.zeros_like(probs)
 
-            for i in xrange(batch_size):
+            for i in range(batch_size):
                 a = int(actions[i])
                 loss = -np.log(probs[i,a]) * td_error[i]
                 target_actor[i,a] = td_error[i]
@@ -122,9 +122,9 @@ def train(X, actor, critic, decodings,out_dir=None):
 
 
         hist.append((np.mean(r_tot), np.mean(frs,0), np.mean(np.sum(frs, 1) == 4)))
-        print "Epoch {2} \t Mean score: {0:.3}\t\t Percentage in range: {1},  {3}".format(
+        print ("Epoch {2} \t Mean score: {0:.3}\t\t Percentage in range: {1},  {3}".format(
             np.mean(r_tot), [round(x,2) for x in np.mean(frs,0)], e,
             round(np.mean(np.sum(frs, 1) == 4),2)
-        )
+        ))
         
     return hist

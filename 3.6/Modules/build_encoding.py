@@ -98,7 +98,7 @@ def get_hierarchy(fragments):
 def get_encodings(fragments):
     
     pairings, id_dict = get_hierarchy(fragments)
-    
+    assert id_dict
     t = build_tree_from_list(pairings, lookup=id_dict)
     encodings = dict(t.encode_leafs())
     decodings = dict([(v, fragments[k][0]) for k,v in encodings.items()])
@@ -128,8 +128,11 @@ def decode(x, translation):
 
     
 def encode_list(mols, encodings):
-    enc_size = len(encodings.values()[0])
-
+    enc_size = None
+    for v in encodings.values():
+        enc_size = len(v)
+        break
+    assert enc_size
 
     def get_len(x):
         return (len(x) + 1) / enc_size
@@ -140,9 +143,12 @@ def encode_list(mols, encodings):
 
     for i in range(X_mat.shape[0]):
         es = encoded_mols[i].split("-")
+
         for j in range(X_mat.shape[1]):
             if j < len(es):
                 e = np.asarray([int(c) for c in es[j]])
+                if not len(e): continue
+                
                 X_mat[i,j,0] = 1
                 X_mat[i,j,1:] = e
 

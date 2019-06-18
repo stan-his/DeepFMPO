@@ -59,7 +59,7 @@ def evaluate_mol(fs, epoch, decodings):
     
     key = get_key(fs)
     
-    if evaluated_mols.has_key(key):
+    if key in evaluated_mols:
         return evaluated_mols[key][0]
     
     try:
@@ -98,7 +98,7 @@ def get_init_dist(X, decodings):
 
 
 def clean_good(X, decodings):
-    X = [X[i] for i in xrange(X.shape[0]) if not
+    X = [X[i] for i in range(X.shape[0]) if not
         evaluate_mol(X[i], -1, decodings).all()]
     return np.asarray(X)
     
