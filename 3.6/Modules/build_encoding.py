@@ -122,6 +122,8 @@ def decode_molecule(enc, decodings):
 def decode(x, translation):
     enc = ["".join([str(int(y)) for y in e[1:]]) for e in x if e[0] == 1]
     fs = [Chem.Mol(translation[e]) for e in enc]
+    if not fs:
+        return Chem.Mol()
     return join_fragments(fs)
 
 
