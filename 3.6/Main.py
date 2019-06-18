@@ -10,6 +10,8 @@ from models import build_models
 from training import train
 from rewards import clean_good
 from rdkit import rdBase
+import logging
+logging.getLogger().setLevel(logging.INFO)
 rdBase.DisableLog('rdApp.error')
 
 
@@ -19,20 +21,30 @@ def main(fragment_file, lead_file):
     fragment_mols += lead_mols
 
 
+    logging.info("Read %s fragments", len(fragment_mols))
+    logging.info("Read %s mols", len(lead_mols))
+    
     fragments, used_mols = get_fragments(fragment_mols)
+    logging.info("Num fragments: %s", len(fragments))
+    logging.info("Used mols: %s", len(used_mols))
+    assert len(fragments)
+    assert len(used_mols)
     encodings, decodings = get_encodings(fragments)
     save_decodings(decodings)
-
+    logging.info("Saved decodings")
+    
     lead_mols = np.asarray(fragment_mols[-len(lead_mols):])[used_mols[-len(lead_mols):]]
 
     X = encode_list(lead_mols, encodings)
 
+    logging.info("Building models")
     actor, critic = build_models(X.shape[1:])
 
     X = clean_good(X, decodings)
 
+    logging.info("Training")
     history = train(X, actor, critic, decodings)
-
+    logging.info("Saving")
     np.save("History/history.npy", history)
 
     
@@ -40,8 +52,8 @@ def main(fragment_file, lead_file):
     
 if __name__ == "__main__":
     
-    fragment_file = "../molecules.smi"
-    lead_file = "../dopamineD4props.csv"
+    fragment_file = "Data/molecules.smi"
+    lead_file = "Data/dopamineD4props.csv"
 
     if len(sys.argv) > 1:
         fragment_file = sys.argv[1]
