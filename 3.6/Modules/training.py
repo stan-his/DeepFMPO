@@ -1,6 +1,7 @@
 import numpy as np
 from global_parameters import MAX_SWAP, MAX_FRAGMENTS
 from rewards import get_init_dist, evaluate_mol, modify_fragment
+import logging
 
 batch_size = 512
 
@@ -64,15 +65,13 @@ def train(X, actor, critic, decodings,out_dir=None):
 
 
 
-                a = a / MAX_SWAP
+                a = a // MAX_SWAP
                 s = a % MAX_SWAP
-
                 if batch_mol[i,a,0] == 1:
                     batch_mol[i,a] = modify_fragment(batch_mol[i,a], s)
                     # rewards[i] = scores * get_reward(batch_mol[i], e)
                 else:
                     rewards[i] -= 0.1
-
 
             # If final round
             if t + 1 == times:
