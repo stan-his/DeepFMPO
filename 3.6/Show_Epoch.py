@@ -39,21 +39,19 @@ def main(epoch):
 
     plot_mols = [[m1,m2] for m1,m2,u in zip(in_mols,out_mols,use) if u]
     order = [np.sum(evaluate_chem_mol(out_mols[i])) for i in range(len(out_mols)) if use[i]]
-    plot_mols = [x for _,x in sorted(zip(order,plot_mols),reverse=True)]
+    plot_mols = [x for _,x in sorted(zip(order,plot_mols), key=lambda pair: pair[0], reverse=True)]
 
 
     plot_mols = [x for y in plot_mols for x in y ]
 
-    # # 
     plot = Draw.MolsToGridImage(plot_mols[:50], molsPerRow=2)
     plot.show()
-    plot.save("out_grid.png")    
+    
     
 if __name__ == "__main__":
     
-    print sys.argv
 
-    if len(sys.argv) > 1:
+    if len(sys.argv) >= 2:
         epoch = int(sys.argv[1])
-        
+        print("here")
         main(epoch)

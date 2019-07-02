@@ -1,46 +1,44 @@
 import numpy as np
-from global_parameters import MAX_SWAP, MAX_FRAGMENTS
+from global_parameters import MAX_SWAP, MAX_FRAGMENTS, GAMMA, BATCH_SIZE, EPOCHS, TIMES, FEATURES
 from rewards import get_init_dist, evaluate_mol, modify_fragment
 
-batch_size = 512
 
-epochs = 4000
-
-gamma = 0.95
-times = 8
-scores = 1. / times
+scores = 1. / TIMES
 n_actions = MAX_FRAGMENTS * MAX_SWAP + 1
 
 
 
+# Train actor and critic networks
+def train(X, actor, critic, decodings, out_dir=None):
 
-def train(X, actor, critic, decodings,out_dir=None):
-    
     hist = []
     dist = get_init_dist(X, decodings)
     m = X.shape[1]
-    
-    
-    for e in xrange(epochs):
 
-        rand_n = np.random.randint(0,X.shape[0],batch_size)
+
+    # For every epoch
+    for e in range(EPOCHS):
+
+        # Select random starting "lead" molecules
+        rand_n = np.random.randint(0,X.shape[0],BATCH_SIZE)
         batch_mol = X[rand_n].copy()
-        r_tot = np.zeros(batch_size)
+        r_tot = np.zeros(BATCH_SIZE)
         org_mols = batch_mol.copy()
-        stopped = np.zeros(batch_size) != 0
+        stopped = np.zeros(BATCH_SIZE) != 0
 
-        for t in xrange(times):
+        # For all modification steps
+        for t in range(TIMES):
 
-            tm = (np.ones((batch_size,1)) * t) / times
+            tm = (np.ones((BATCH_SIZE,1)) * t) / TIMES
 
             probs = actor.predict([batch_mol, tm])
-            actions = np.zeros((batch_size))
-            rand_select = np.random.rand(batch_size)
+            actions = np.zeros((BATCH_SIZE))
+            rand_select = np.random.rand(BATCH_SIZE)
             old_batch = batch_mol.copy()
-            rewards = np.zeros((batch_size,1))
+            rewards = np.zeros((BATCH_SIZE,1))
 
-
-            for i in xrange(batch_size):
+            # Find probabilities for modification actions
+            for i in range(BATCH_SIZE):
                 a = 0
                 while True:
                     rand_select[i] -= probs[i,a]
@@ -48,11 +46,14 @@ def train(X, actor, critic, decodings,out_dir=None):
                         break
                     a += 1
 
-                actions[i] = a 
+                actions[i] = a
 
+            # Initial critic value
             Vs = critic.predict([batch_mol,tm])
 
-            for i in xrange(batch_size):
+
+            # Select actions
+            for i in range(BATCH_SIZE):
 
                 a = int(actions[i])
                 if stopped[i] or a == n_actions - 1:
@@ -64,22 +65,21 @@ def train(X, actor, critic, decodings,out_dir=None):
 
 
 
-                a = a / MAX_SWAP
+                a = int(a // MAX_SWAP)
                 s = a % MAX_SWAP
 
                 if batch_mol[i,a,0] == 1:
                     batch_mol[i,a] = modify_fragment(batch_mol[i,a], s)
-                    # rewards[i] = scores * get_reward(batch_mol[i], e)
                 else:
                     rewards[i] -= 0.1
 
 
             # If final round
-            if t + 1 == times:
+            if t + 1 == TIMES:
                 frs = []
                 for i in range(batch_mol.shape[0]):
 
-                    # If new molecule
+                    # If molecule was modified
                     if not np.all(org_mols[i] == batch_mol[i]):
 
                         fr = evaluate_mol(batch_mol[i], e, decodings)
@@ -89,28 +89,27 @@ def train(X, actor, critic, decodings,out_dir=None):
                         if all(fr):
                             rewards[i] *= 2
                     else:
-    #                     rewards[i] += -1
-                        frs.append([False] * 4)
+                        frs.append([False] * FEATURES)
 
 
+                # Update distribution of rewards
+                dist = 0.5 * dist + 0.5 * (1.0/FEATURES * BATCH_SIZE / (1.0 + np.sum(frs,0)))
 
-                dist = 0.5 * dist + 0.5 * (0.25 * batch_size / (1.0 + np.sum(frs,0)))
 
-
-
-            target = rewards + gamma * critic.predict([batch_mol, tm+1.0/times])
+            # Calculate TD-error
+            target = rewards + GAMMA * critic.predict([batch_mol, tm+1.0/TIMES])
             td_error = target - Vs
 
-
+            # Minimize TD-error
             critic.fit([old_batch,tm], target, verbose=0)
             target_actor = np.zeros_like(probs)
 
-            for i in xrange(batch_size):
+            for i in range(BATCH_SIZE):
                 a = int(actions[i])
                 loss = -np.log(probs[i,a]) * td_error[i]
                 target_actor[i,a] = td_error[i]
 
-
+            # Maximize expected reward.
             actor.fit([old_batch,tm], target_actor, verbose=0)
 
             r_tot += rewards[:,0]
@@ -122,9 +121,9 @@ def train(X, actor, critic, decodings,out_dir=None):
 
 
         hist.append((np.mean(r_tot), np.mean(frs,0), np.mean(np.sum(frs, 1) == 4)))
-        print "Epoch {2} \t Mean score: {0:.3}\t\t Percentage in range: {1},  {3}".format(
+        print("Epoch {2} \t Mean score: {0:.3}\t\t Percentage in range: {1},  {3}".format(
             np.mean(r_tot), [round(x,2) for x in np.mean(frs,0)], e,
             round(np.mean(np.sum(frs, 1) == 4),2)
-        )
-        
+        ))
+
     return hist

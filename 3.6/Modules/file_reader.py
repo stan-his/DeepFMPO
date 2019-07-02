@@ -1,7 +1,8 @@
 from mol_utils import drop_salt
 from rdkit import Chem
 
-
+# Read a file containing SMILES
+# The file should be a .smi or a .csv where the first column should contain a SMILES string
 def read_file(file_name, drop_first=True):
     
     molObjects = []
