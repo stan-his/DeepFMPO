@@ -107,6 +107,8 @@ def get_encodings(fragments):
 
     pairings, id_dict = get_hierarchy(fragments)
 
+    assert id_dict
+
     t = build_tree_from_list(pairings, lookup=id_dict)
     encodings = dict(t.encode_leafs())
     decodings = dict([(v, fragments[k][0]) for k,v in encodings.items()])
@@ -132,12 +134,19 @@ def decode_molecule(enc, decodings):
 def decode(x, translation):
     enc = ["".join([str(int(y)) for y in e[1:]]) for e in x if e[0] == 1]
     fs = [Chem.Mol(translation[e]) for e in enc]
+    if not fs:
+        return Chem.Mol()
     return join_fragments(fs)
 
 
 # Encode a list of molecules into their corresponding encodings
 def encode_list(mols, encodings):
-    enc_size = len(list(encodings.values())[0])
+  
+    enc_size = None
+    for v in encodings.values():
+        enc_size = len(v)
+        break
+    assert enc_size
 
 
     def get_len(x):
@@ -149,9 +158,12 @@ def encode_list(mols, encodings):
 
     for i in range(X_mat.shape[0]):
         es = encoded_mols[i].split("-")
+
         for j in range(X_mat.shape[1]):
             if j < len(es):
                 e = np.asarray([int(c) for c in es[j]])
+                if not len(e): continue
+                
                 X_mat[i,j,0] = 1
                 X_mat[i,j,1:] = e
 

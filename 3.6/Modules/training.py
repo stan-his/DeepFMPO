@@ -1,6 +1,7 @@
 import numpy as np
 from global_parameters import MAX_SWAP, MAX_FRAGMENTS, GAMMA, BATCH_SIZE, EPOCHS, TIMES, FEATURES
 from rewards import get_init_dist, evaluate_mol, modify_fragment
+import logging
 
 
 scores = 1. / TIMES
@@ -26,8 +27,10 @@ def train(X, actor, critic, decodings, out_dir=None):
         org_mols = batch_mol.copy()
         stopped = np.zeros(BATCH_SIZE) != 0
 
+
         # For all modification steps
         for t in range(TIMES):
+
 
             tm = (np.ones((BATCH_SIZE,1)) * t) / TIMES
 
@@ -37,8 +40,10 @@ def train(X, actor, critic, decodings, out_dir=None):
             old_batch = batch_mol.copy()
             rewards = np.zeros((BATCH_SIZE,1))
 
+
             # Find probabilities for modification actions
             for i in range(BATCH_SIZE):
+
                 a = 0
                 while True:
                     rand_select[i] -= probs[i,a]
@@ -66,13 +71,12 @@ def train(X, actor, critic, decodings, out_dir=None):
 
 
                 a = int(a // MAX_SWAP)
-                s = a % MAX_SWAP
 
+                s = a % MAX_SWAP
                 if batch_mol[i,a,0] == 1:
                     batch_mol[i,a] = modify_fragment(batch_mol[i,a], s)
                 else:
                     rewards[i] -= 0.1
-
 
             # If final round
             if t + 1 == TIMES:
@@ -104,7 +108,9 @@ def train(X, actor, critic, decodings, out_dir=None):
             critic.fit([old_batch,tm], target, verbose=0)
             target_actor = np.zeros_like(probs)
 
+
             for i in range(BATCH_SIZE):
+
                 a = int(actions[i])
                 loss = -np.log(probs[i,a]) * td_error[i]
                 target_actor[i,a] = td_error[i]
@@ -121,9 +127,10 @@ def train(X, actor, critic, decodings, out_dir=None):
 
 
         hist.append((np.mean(r_tot), np.mean(frs,0), np.mean(np.sum(frs, 1) == 4)))
-        print("Epoch {2} \t Mean score: {0:.3}\t\t Percentage in range: {1},  {3}".format(
+        print ("Epoch {2} \t Mean score: {0:.3}\t\t Percentage in range: {1},  {3}".format(
             np.mean(r_tot), [round(x,2) for x in np.mean(frs,0)], e,
             round(np.mean(np.sum(frs, 1) == 4),2)
         ))
+        
 
     return hist
