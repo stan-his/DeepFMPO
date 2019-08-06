@@ -126,7 +126,7 @@ def train(X, actor, critic, decodings, out_dir=None):
         np.save("History/score-{}.npy".format(e), np.asarray(frs))
 
 
-        hist.append((np.mean(r_tot), np.mean(frs,0), np.mean(np.sum(frs, 1) == 4)))
+        hist.append([np.mean(r_tot)] + np.mean(frs,0) + [np.mean(np.sum(frs, 1) == 4)])
         print ("Epoch {2} \t Mean score: {0:.3}\t\t Percentage in range: {1},  {3}".format(
             np.mean(r_tot), [round(x,2) for x in np.mean(frs,0)], e,
             round(np.mean(np.sum(frs, 1) == 4),2)
