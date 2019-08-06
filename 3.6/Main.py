@@ -20,10 +20,9 @@ def main(fragment_file, lead_file):
     lead_mols = read_file(lead_file)
     fragment_mols += lead_mols
 
-
     logging.info("Read %s fragments", len(fragment_mols))
     logging.info("Read %s mols", len(lead_mols))
-    
+
     fragments, used_mols = get_fragments(fragment_mols)
     logging.info("Num fragments: %s", len(fragments))
     logging.info("Used mols: %s", len(used_mols))
@@ -34,6 +33,7 @@ def main(fragment_file, lead_file):
     logging.info("Saved decodings")
     
     lead_mols = np.asarray(fragment_mols[-len(lead_mols):])[used_mols[-len(lead_mols):]]
+
 
     X = encode_list(lead_mols, encodings)
 
@@ -47,19 +47,20 @@ def main(fragment_file, lead_file):
     logging.info("Saving")
     np.save("History/history.npy", history)
 
-    
-    
-    
+
+
+
 if __name__ == "__main__":
-    
+
     fragment_file = "Data/molecules.smi"
     lead_file = "Data/dopamineD4props.csv"
 
+
     if len(sys.argv) > 1:
         fragment_file = sys.argv[1]
-        
+
     if len(sys.argv) > 2:
         lead_file = sys.argv[2]
-        
+
     main(fragment_file, lead_file)
-        
+

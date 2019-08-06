@@ -12,56 +12,52 @@ import rdkit.Chem as Chem
 from keras.layers import LeakyReLU, Bidirectional, Multiply
 from keras.regularizers import l2
 from keras.layers import Concatenate, Flatten, Softmax
-from global_parameters import MAX_FRAGMENTS
+from global_parameters import MAX_FRAGMENTS, MAX_SWAP, N_DENSE, \
+                              N_DENSE2, N_LSTM
 
 
 
+
+# Objective to optimize
 def maximization(y_true, y_pred):
     return K.mean(-K.log(y_pred) * y_true)
 
 
 
-
-max_swap = 5
-
-
-n_dense = 128
-n_dense2 = 128
-n_dense3 = 64
-n_lstm = 32
-n_actions = MAX_FRAGMENTS * max_swap + 1
+n_actions = MAX_FRAGMENTS * MAX_SWAP + 1
 
 
+# Create models
 def build_models(inp_shape):
 
+    # Build the actor
     inp = Input(inp_shape)
-    hidden_inp = LeakyReLU(0.1)(TimeDistributed(Dense(n_dense, activation="linear"))(inp))
-    hidden = LSTM(n_lstm, return_sequences=True)(hidden_inp)
+    hidden_inp = LeakyReLU(0.1)(TimeDistributed(Dense(N_DENSE, activation="linear"))(inp))
+    hidden = LSTM(N_LSTM, return_sequences=True)(hidden_inp)
     hidden = Flatten()(hidden)
 
-    hidden2 = LSTM(n_lstm, return_sequences=True, go_backwards=True)(hidden_inp)
+    hidden2 = LSTM(N_LSTM, return_sequences=True, go_backwards=True)(hidden_inp)
     hidden2 = Flatten()(hidden2)
 
     inp2 = Input((1,))
     hidden = Concatenate()([hidden, hidden2, inp2])
 
-    hidden = LeakyReLU(0.1)(Dense(n_dense2, activation="linear")(hidden))
+    hidden = LeakyReLU(0.1)(Dense(N_DENSE2, activation="linear")(hidden))
     out = Dense(n_actions, activation="softmax", activity_regularizer=l2(0.001))(hidden)
 
     actor = Model([inp,inp2], out)
     actor.compile(loss=maximization, optimizer=Adam(0.0005))
 
 
-
-
+    # Build the critic
     inp = Input(inp_shape)
-    hidden = LeakyReLU(0.1)(TimeDistributed(Dense(n_dense, activation="linear"))(inp))
-    hidden = Bidirectional(LSTM(2*n_lstm))(hidden)
+    hidden = LeakyReLU(0.1)(TimeDistributed(Dense(N_DENSE, activation="linear"))(inp))
+    hidden = Bidirectional(LSTM(2*N_LSTM))(hidden)
 
     inp2 = Input((1,))
     hidden = Concatenate()([hidden, inp2])
-    hidden = LeakyReLU(0.1)(Dense(n_dense2, activation="linear")(hidden))
-    out = LeakyReLU(0.1)(Dense(1, activation="linear")(hidden))
+    hidden = LeakyReLU(0.1)(Dense(N_DENSE2, activation="linear")(hidden))
+    out = Dense(1, activation="linear")(hidden)
 
     critic = Model([inp,inp2], out)
     critic.compile(loss="MSE", optimizer=Adam(0.0001))

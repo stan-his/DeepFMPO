@@ -3,10 +3,13 @@ import Levenshtein
 from rdkit.Chem import rdFMCS
 
 
-def calculateDistance(smi1,smi2): # calculate edit distance
+
+# Calculate similartity between two molecules (or fragments) based on their edit distance
+def calculateDistance(smi1,smi2): 
     return 1 - ETA * Levenshtein.distance(smi1, smi2)
 
 
+# Calculate the MCS Tanimoto similarity between two molecules
 def calculateMCStanimoto(ref_mol, target_mol):
 
     numAtomsRefCpd = float(ref_mol.GetNumAtoms())
@@ -27,7 +30,8 @@ def calculateMCStanimoto(ref_mol, target_mol):
 
 
 
-
+# Calculate the similarity of two molecules (with SMILE representations smi1 and smi2) 
+#  This is the maximum of the two functions above
 def similarity(smi1, smi2, mol1, mol2):
     global s1,s2
     d1 = calculateDistance(smi1, smi2)

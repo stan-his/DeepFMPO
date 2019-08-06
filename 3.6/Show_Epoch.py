@@ -44,16 +44,17 @@ def main(epoch):
                                      reverse=True)]
 
 
+
     plot_mols = [x for y in plot_mols for x in y ]
 
-    # # 
     plot = Draw.MolsToGridImage(plot_mols[:50], molsPerRow=2)
     plot.show()
-    plot.save("out_grid.png")    
+    
     
 if __name__ == "__main__":
     
     if len(sys.argv) > 1:
+
         epoch = int(sys.argv[1])
-        
+        print("here")
         main(epoch)
