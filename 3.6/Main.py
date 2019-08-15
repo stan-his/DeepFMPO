@@ -20,12 +20,12 @@ def main(fragment_file, lead_file):
     lead_mols = read_file(lead_file)
     fragment_mols += lead_mols
 
-    logging.info("Read %s fragments", len(fragment_mols))
-    logging.info("Read %s mols", len(lead_mols))
+    logging.info("Read %s molecules for fragmentation library", len(fragment_mols))
+    logging.info("Read %s lead moleculs", len(lead_mols))
 
     fragments, used_mols = get_fragments(fragment_mols)
     logging.info("Num fragments: %s", len(fragments))
-    logging.info("Used mols: %s", len(used_mols))
+    logging.info("Total molecules used: %s", len(used_mols))
     assert len(fragments)
     assert len(used_mols)
     encodings, decodings = get_encodings(fragments)

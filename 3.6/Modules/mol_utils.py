@@ -1,11 +1,17 @@
 from global_parameters import MOL_SPLIT_START, MAX_FREE, MAX_ATOMS, MAX_FRAGMENTS
 from rdkit import Chem
 import numpy as np
-import logging
+
 
 # Main module for handleing the interactions with molecules
 
 
+
+
+
+# Atom numbers of noble gases (should not be used as dummy atoms)
+NOBLE_GASES = set([2, 10, 18, 36, 54, 86])
+ng_correction = set()
 
 
 # Drop salt from SMILES string
@@ -82,23 +88,17 @@ def spf(mol, split_id):
 # This is required so that a given list of fragments can be rebuilt into the same
 #   molecule as was given when splitting the molecule
 def create_chain(splits):
-    splits_ids = [x for x in [sorted([a.GetAtomicNum() for a in m.GetAtoms()
-                          if a.GetAtomicNum() >= MOL_SPLIT_START]) for m in splits]
-                  if x]
+    splits_ids = np.asarray(
+        [sorted([a.GetAtomicNum() for a in m.GetAtoms()
+              if a.GetAtomicNum() >= MOL_SPLIT_START]) for m in splits])
 
+    splits_ids = \
+        [sorted([a.GetAtomicNum() for a in m.GetAtoms()
+              if a.GetAtomicNum() >= MOL_SPLIT_START]) for m in splits]
 
     splits2 = []
-
-    if not splits_ids:
-        return []
-    
-    mv = max(splits_ids)
-    try:
-        look_for = [mv if isinstance(mv, np.int64) else mv[0]]
-    except:
-        logging.exception("no mv: %r", splits_ids)
-        raise
-    
+    mv = np.max(splits_ids)
+    look_for = [mv if isinstance(mv, np.int64) else mv[0]]
     join_order = []
 
     mols = []
@@ -108,13 +108,8 @@ def create_chain(splits):
         if l[0] == look_for[0] and len(l) == 1:
             mols.append(splits[i])
             splits2.append(splits_ids[i])
-            try:
-                splits_ids[i] = []
-            except:
-                print(repr(splits_ids[i]))
-                raise
-    
-    splits_ids = np.asarray(splits_ids)
+            splits_ids[i] = []
+
 
     while len(look_for) > 0:
         sid = look_for.pop()
@@ -147,6 +142,9 @@ def simplify_splits(mol, splits, join_order):
             if i == j:
                 td[i] = MOL_SPLIT_START + n
                 n += 1
+                if n in NOBLE_GASES:
+                    n += 1
+
 
     for a in mol.GetAtoms():
         k = a.GetAtomicNum()
@@ -179,7 +177,9 @@ def get_join_list(mol):
             bonds[an - MOL_SPLIT_START] = b.GetBondType()
             a.SetAtomicNum(0)
 
-    return join, bonds, rem
+    return [x for x in join if x is not None],\
+           [x for x in bonds if x is not None],\
+           [x for x in rem if x is not None]
 
 
 # Join a list of fragments toghether into a molecule
@@ -295,7 +295,6 @@ def get_fragments(mols):
         try:
             fs = split_molecule(mol)
         except:
-            logging.exception("Could not split %r", Chem.MolToSmiles(mol))
             continue
 
         if len(fs) <= MAX_FRAGMENTS and all(map(should_use, fs)):
