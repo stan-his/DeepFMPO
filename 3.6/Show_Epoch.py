@@ -6,10 +6,9 @@ from rewards import evaluate_chem_mol
 from rdkit.Chem import Draw
 import rdkit.Chem as Chem
 import matplotlib.pyplot as plt
-
-
 import numpy as np
-
+from rdkit import rdBase
+rdBase.DisableLog('rdApp.error')
 
 
 def safe_decode(x, decodings):
@@ -19,8 +18,8 @@ def safe_decode(x, decodings):
         return m
     except:
         return None
-    
-    
+
+
 
 def main(epoch):
     decodings2 = read_decodings()
@@ -49,10 +48,10 @@ def main(epoch):
 
     plot = Draw.MolsToGridImage(plot_mols[:50], molsPerRow=2)
     plot.show()
-    
-    
+
+
 if __name__ == "__main__":
-    
+
     if len(sys.argv) > 1:
 
         epoch = int(sys.argv[1])
