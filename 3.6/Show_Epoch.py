@@ -7,6 +7,7 @@ from rdkit.Chem import Draw
 import rdkit.Chem as Chem
 import matplotlib.pyplot as plt
 import numpy as np
+import argparse
 from rdkit import rdBase
 rdBase.DisableLog('rdApp.error')
 
@@ -21,7 +22,7 @@ def safe_decode(x, decodings):
 
 
 
-def main(epoch):
+def main(epoch, savefile=None):
     decodings2 = read_decodings()
 
 
@@ -49,11 +50,23 @@ def main(epoch):
     plot = Draw.MolsToGridImage(plot_mols[:50], molsPerRow=2)
     plot.show()
 
+    if not savefile is None:
+
+        with open(savefile, "w") as f:
+            f.write("Initial molecule ; Modified molecule\n")
+            for i in range(0,len(plot_mols), 2):
+                f.write(f'{Chem.MolToSmiles(plot_mols[i])} ; {Chem.MolToSmiles(plot_mols[i+1])}\n')
+
+
+
+parser = argparse.ArgumentParser()
+
+parser.add_argument("-SMILES", dest="SMILEFile", help="Save SMILE strings to file", default=None)
+parser.add_argument("-epoch", dest="epoch", help="Epoch to display", required=True)
+
 
 if __name__ == "__main__":
 
-    if len(sys.argv) > 1:
-
-        epoch = int(sys.argv[1])
-        print("here")
-        main(epoch)
+    args = parser.parse_args()
+    epoch = int(args.epoch)
+    main(int(args.epoch), args.SMILEFile)
