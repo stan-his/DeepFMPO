@@ -22,7 +22,7 @@ def safe_decode(x, decodings):
 
 
 
-def main(epoch, savefile=None):
+def main(epoch, savefile=None, imagefile=None):
     decodings2 = read_decodings()
 
 
@@ -48,6 +48,9 @@ def main(epoch, savefile=None):
     plot_mols = [x for y in plot_mols for x in y ]
 
     plot = Draw.MolsToGridImage(plot_mols[:50], molsPerRow=2)
+
+    if not imagefile is None:
+        plot.save(imagefile)
     plot.show()
 
     if not savefile is None:
@@ -63,10 +66,10 @@ parser = argparse.ArgumentParser()
 
 parser.add_argument("-SMILES", dest="SMILEFile", help="Save SMILE strings to file", default=None)
 parser.add_argument("-epoch", dest="epoch", help="Epoch to display", required=True)
-
+parser.add_argument("-image", dest="image", help="File to save image in", default=None)
 
 if __name__ == "__main__":
 
     args = parser.parse_args()
     epoch = int(args.epoch)
-    main(int(args.epoch), args.SMILEFile)
+    main(int(args.epoch), args.SMILEFile, args.image)
