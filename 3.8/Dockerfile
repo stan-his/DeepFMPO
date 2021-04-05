@@ -5,9 +5,12 @@ RUN apt-get update && apt-get install -y vim cmake
 
 WORKDIR /app
 
-COPY . . 
-
 #RUN tar -xvf rdkit/rdkit.tar.gz -C /tmp
 
-RUN pip install -r requirements.txt
+COPY requirements.txt /app/env/requirements.txt
+
+RUN pip install -r /app/env/requirements.txt
+
+
+COPY . . 
 

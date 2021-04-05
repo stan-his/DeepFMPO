@@ -76,12 +76,16 @@ def evaluate_mol(fs, epoch, decodings):
 
 # Calculate rewards and give penalty if a locked/empty fragment is changed.
 def get_reward(fs,epoch,dist):
+    mol = decode(fs, decodings)
+    tpsa = Descriptors.TPSA(mol)
 
+    return tpsa
+"""
     if fs[fs[:,0] == 0].sum() < 0:
         return -0.1
 
     return (dist * evaluate_mol(fs, epoch)).sum()
-
+"""
 
 
 # Get initial distribution of rewards among lead molecules
